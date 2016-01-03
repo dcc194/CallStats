@@ -5,17 +5,19 @@ import os
 import base64
 import email
 import mysql.connector
+import sys
 
 from apiclient import discovery
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
 
-try:
-    import argparse
-    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-except ImportError:
-    flags = None
+# try:
+#     import argparse
+#     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+# except ImportError:
+#     flags = None
+flags = None
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 CLIENT_SECRET_FILE = 'client_secret.json'
@@ -77,11 +79,19 @@ def main():
     print(num)
 
     msgs = msgResults.get('messages')
+
+    cnx = mysql.connector.connect(user='root', password=sys.argv[1],
+                              host='127.0.0.1',
+                              database='all_calls')
+
+
     for msglst in msgs:
         msgID = msglst.get('id')
         print(msgID)
         msg = service.users().messages().get(userId='me', id=msgID, format='raw').execute()
         print(msg)
+
+
         #print(msg.get('payload').get('parts')[0].get('body').get('data'))
         #msg_str = base64.urlsafe_b64decode(msg.get('payload').get('parts')[1].get('data'))
         # mime_msg = email.message_from_string(msg_str)
@@ -90,10 +100,8 @@ def main():
         mime_msg = email.message_from_string(msg_str)
 
         print(mime_msg)
-
-
-
-
+        
+    cnx.close()
 
 if __name__ == '__main__':
     main()
