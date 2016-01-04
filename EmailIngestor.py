@@ -89,17 +89,57 @@ def main():
         msgID = msglst.get('id')
         print(msgID)
         msg = service.users().messages().get(userId='me', id=msgID, format='raw').execute()
-        print(msg)
+
+        # endOfJunk = msg.find('<https://groups.google.com/group/worcesterfd/subscribe>')
+        # endOfData = msg.find('--')
+        # msgClip = msg[endOfJunk:endOfData]
+        #
+        # print ('*************************************')
+        #print(msg)
 
 
-        #print(msg.get('payload').get('parts')[0].get('body').get('data'))
-        #msg_str = base64.urlsafe_b64decode(msg.get('payload').get('parts')[1].get('data'))
-        # mime_msg = email.message_from_string(msg_str)
+
+        print('********************************1')
+
+
         msg_str = base64.urlsafe_b64decode(msg['raw'].encode('ASCII'))
-        #print(msg_str)
+        #print('********************************2')
         mime_msg = email.message_from_string(msg_str)
+        # print (mime_msg)
 
-        print(mime_msg)
+        #useFwdIdxStart = False
+        payload = ''
+        if mime_msg.is_multipart():
+            # payload = mime_msg[0].get_payload()
+            # # for payload in mime_msg.get_payload():
+            #     # if payload.is_multipart(): ...
+            # print('*******************TEST A')
+            # useFwdIdxStart = True
+            # print (payload.get_payload())
+            print('\n')
+        else:
+            print('*******************TEST B')
+            #print (mime_msg.get_payload())
+            #print('\n')
+            payload = mime_msg.get_payload()
+
+        endIdx = payload.find('\r\n--')
+        print (endIdx)
+        payloadClipped = payload[:endIdx]
+        print (payloadClipped)
+
+
+
+
+
+        # #print(msg.get('payload').get('parts')[0].get('body').get('data'))
+        # #msg_str = base64.urlsafe_b64decode(msg.get('payload').get('parts')[1].get('data'))
+        # # mime_msg = email.message_from_string(msg_str)
+        # msg_str = base64.urlsafe_b64decode(msg['raw'].encode('ASCII'))
+        # #print(msg_str)
+        # mime_msg = email.message_from_string(msg_str)
+        #
+        # print(mime_msg)
         
     cnx.close()
 
