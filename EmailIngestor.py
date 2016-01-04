@@ -4,8 +4,11 @@ import httplib2
 import os
 import base64
 import email
+import email.utils
 import mysql.connector
 import sys
+from datetime import date
+import re
 
 from apiclient import discovery
 import oauth2client
@@ -52,6 +55,183 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
+def indOfNextKeyword(msg,curIdx):
+    keyIdx = 999999999999
+
+    keywrds = ['XST:', 'MUN:', 'NAT:', 'MAP/BOX-PLAN:', 'ADC:', 'I#', 'TIME:', 'NOTES:', 'Note:', 'TRUCKS']
+    for w in keywrds:
+        tmpIdx = msg.find(w)
+        if tmpIdx > curIdx and tmpIdx < keyIdx:
+            keyIdx = tmpIdx
+
+    if keyIdx == 999999999999:
+       keyIdx = -1
+    return keyIdx
+
+def getAddr(msg):
+
+    xstIdx = msg.find('XST:')
+    if (xstIdx < 5 and xstIdx > -1):
+        return ''
+    elif (xstIdx > 4):
+        addrend = msg.find(':')
+        return msg[0:min(addrend,xstIdx)]
+
+def getCountyNum(msg):
+    sIdx = msg.find('I/#')
+    if sIdx == -1:
+        return ''
+    else:
+        eIdx = indOfNextKeyword(msg,sIdx)
+        if eIdx == -1:
+            eIdx = len(msg)
+    return msg[sIdx+2:eIdx]
+
+def getXst(msg):
+    sIdx = msg.find('XST:')
+    if sIdx == -1:
+        return ''
+    else:
+        eIdx = indOfNextKeyword(msg,sIdx)
+        if eIdx == -1:
+            eIdx = len(msg)
+    return msg[sIdx+4:eIdx]
+
+def getMun(msg):
+    sIdx = msg.find('MUN:')
+    if sIdx == -1:
+        return ''
+    else:
+        eIdx = indOfNextKeyword(msg,sIdx)
+        if eIdx == -1:
+            eIdx = len(msg)
+    return msg[sIdx+4:eIdx]
+
+def getNat(msg):
+    sIdx = msg.find('NAT:')
+    if sIdx == -1:
+        return ''
+    else:
+        eIdx = indOfNextKeyword(msg,sIdx)
+        if eIdx == -1:
+            eIdx = len(msg)
+    return msg[sIdx+4:eIdx]
+
+def getMap(msg):
+    sIdx = msg.find('MAP/BOX-PLAN:')
+    if sIdx == -1:
+        return ''
+    else:
+        eIdx = indOfNextKeyword(msg,sIdx)
+        if eIdx == -1:
+            eIdx = len(msg)
+    return msg[sIdx+13:eIdx]
+
+def getDateime(msg):
+    sIdx = msg.find('TIME:')
+    if sIdx == -1:
+        return ''
+    else:
+        eIdx = indOfNextKeyword(msg,sIdx)
+        if eIdx == -1:
+            eIdx = len(msg)
+    return msg[sIdx+5:eIdx]
+
+def getNotes(msg):
+    sIdx = msg.find('NOTES:')
+    if sIdx == -1:
+        return ''
+    else:
+        eIdx = indOfNextKeyword(msg,sIdx)
+    return msg[sIdx+6:eIdx]
+
+def getNote(msg):
+    sIdx = msg.find('Note:')
+    print(sIdx)
+    if sIdx == -1:
+        return ''
+    else:
+        eIdx = indOfNextKeyword(msg,sIdx)
+        if eIdx == -1:
+            eIdx = len(msg)
+    return msg[sIdx+5:eIdx]
+
+def getTrucks(msg):
+    sIdx = msg.find('TRUCKS:')
+    if sIdx == -1:
+        return ''
+    else:
+        eIdx = indOfNextKeyword(msg,sIdx)
+        if eIdx == -1:
+            eIdx = len(msg)
+    return msg[sIdx+7:eIdx]
+
+def getlat(msg):
+    notes = getNotes(msg)
+
+    m = re.search('40.[0-9]+',notes)
+
+    if m:
+        return m.group(0)
+    else:
+        return ''
+
+def getlon(msg):
+    notes = getNotes(msg)
+
+    m = re.search('-0*75.[0-9]+',notes)
+
+    if m:
+        return m.group(0)
+    else:
+        return ''
+
+
+def parseMsg(msg):
+    call = {'County_Num' : '',
+    'addr': '',
+    'xst': '',
+    'mun': '',
+    'nat': '',
+    'map': '',
+    'date_time': '',
+    'notes': '',
+    'Trucks': '',
+    'lat': '',
+    'lon': '',
+    }
+
+    xstIdx = msg.find('XST:')
+    if (xstIdx < 5 and xstIdx > -1):
+        call['addr'] = getXst(msg)
+        call['notes'] = getNotes(msg)
+
+    elif (xstIdx > 4 and xstIdx > -1):
+        call['addr'] = getAddr(msg)
+        call['notes'] = getNotes(msg)
+
+    elif xstIdx < 0:
+        munIdx = msg.find('MUN:')
+        if munIdx < 0:
+            # must just be notes
+            call['County_Num'] = msg[1:msg.find(' ')]
+            call['notes'] = getNote(msg)
+
+    call['xst'] = getXst(msg)
+    call['mun'] = getMun(msg)
+    call['nat'] = getNat(msg)
+    call['map'] = getMap(msg)
+    call['date_time'] = getDateime(msg)
+    call['Trucks'] = getTrucks(msg)
+    call['lat'] = getlat(msg)
+    call['lon'] = getlon(msg)
+
+    print (call)
+
+
+
+    return call
+
 def main():
     """Shows basic usage of the Gmail API.
 
@@ -85,6 +265,11 @@ def main():
                               database='all_calls')
 
 
+    add_call = ("INSERT INTO calls "
+                    "(County_Num, addr, xst, mun, nat, map, date_time, notes, Trucks, lat, lon) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+
+
     for msglst in msgs:
         msgID = msglst.get('id')
         print(msgID)
@@ -96,8 +281,6 @@ def main():
         #
         # print ('*************************************')
         #print(msg)
-
-
 
         print('********************************1')
 
@@ -126,7 +309,10 @@ def main():
         endIdx = payload.find('\r\n--')
         print (endIdx)
         payloadClipped = payload[:endIdx]
+        payloadClipped = payloadClipped.replace('=\r\n','')
+        payloadClipped = payloadClipped.replace('\r\n','')
         print (payloadClipped)
+        parseMsg(payloadClipped)
 
 
 
