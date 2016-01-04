@@ -4,9 +4,9 @@ import httplib2
 import os
 import base64
 import email
-import email.utils
 import mysql.connector
 import sys
+import dateutil.parser
 from datetime import date
 import re
 
@@ -187,7 +187,7 @@ def getlon(msg):
         return ''
 
 
-def parseMsg(msg):
+def parseMsg(msg,date):
     call = {'County_Num' : '',
     'addr': '',
     'xst': '',
@@ -225,6 +225,10 @@ def parseMsg(msg):
     call['Trucks'] = getTrucks(msg)
     call['lat'] = getlat(msg)
     call['lon'] = getlon(msg)
+
+    #datestuff = email.utils.parsedate(date)
+    datestuff = dateutil.parser.parse(date).astimezone(dateutil.tz.tzstr('America/New_York'))
+    print(datestuff)
 
     print (call)
 
@@ -279,8 +283,9 @@ def main():
         # endOfData = msg.find('--')
         # msgClip = msg[endOfJunk:endOfData]
         #
-        # print ('*************************************')
+        # print ('******(*******************************')
         #print(msg)
+
 
         print('********************************1')
 
@@ -289,6 +294,8 @@ def main():
         #print('********************************2')
         mime_msg = email.message_from_string(msg_str)
         # print (mime_msg)
+        date = mime_msg["Date"]
+        print(date)
 
         #useFwdIdxStart = False
         payload = ''
@@ -312,7 +319,7 @@ def main():
         payloadClipped = payloadClipped.replace('=\r\n','')
         payloadClipped = payloadClipped.replace('\r\n','')
         print (payloadClipped)
-        parseMsg(payloadClipped)
+        parseMsg(payloadClipped,date)
 
 
 
