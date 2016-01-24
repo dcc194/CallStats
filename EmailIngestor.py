@@ -9,22 +9,27 @@ import sys
 import dateutil.parser
 from datetime import date
 import re
+import config
 
 from apiclient import discovery
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
 
-# try:
-#     import argparse
-#     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-# except ImportError:
-#     flags = None
-flags = None
+
+
+try:
+    import argparse
+    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+except ImportError:
+    flags = None
+#flags = None
+
+
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 CLIENT_SECRET_FILE = 'client_secret.json'
-APPLICATION_NAME = 'Gmail API Python Quickstart'
+APPLICATION_NAME = 'EmailIngestor'
 
 
 def get_credentials():
@@ -239,9 +244,14 @@ def parseMsg(msg,date):
 def main():
     """Shows basic usage of the Gmail API.
 
+
     Creates a Gmail API service object and outputs a list of label names
     of the user's Gmail account.
     """
+    #print (flags)
+
+    #return
+
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('gmail', 'v1', http=http)
@@ -264,7 +274,7 @@ def main():
 
     msgs = msgResults.get('messages')
 
-    cnx = mysql.connector.connect(user='root', password=sys.argv[1],
+    cnx = mysql.connector.connect(user='root', password=config.mysqlPass,
                               host='127.0.0.1',
                               database='all_calls')
 
