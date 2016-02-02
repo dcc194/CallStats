@@ -72,6 +72,9 @@ def indOfNextKeyword(msg, curIdx):
         keyIdx = -1
     return keyIdx
 
+def getStationKey(msg):
+    splits = msg.split(' ')
+    return splits[0]
 
 def getAddr(msg):
     xstIdx = msg.find('XST:')
@@ -138,15 +141,16 @@ def getMap(msg):
 
 
 def getDateime(msg):
-    sIdx = msg.find('TIME:')
-    if sIdx == -1:
-        return ''
-    else:
-        eIdx = indOfNextKeyword(msg, sIdx)
-        if eIdx == -1:
-            eIdx = len(msg)
-    return msg[sIdx + 5:eIdx]
-
+    # sIdx = msg.find('TIME:')
+    # if sIdx == -1:
+    #     return ''
+    # else:
+    #     eIdx = indOfNextKeyword(msg, sIdx)
+    #     if eIdx == -1:
+    #         eIdx = len(msg)
+    splits = msg.split(' ')
+    date = splits[2].split('-')
+    return date[2] + '-' + date[1] + '-' + date[0] + ' ' + splits[1]
 
 def getNotes(msg):
     sIdx = msg.find('NOTES:')
@@ -221,18 +225,22 @@ def parseMsg(msg, date):
     if (xstIdx < 5 and xstIdx > -1):
         call['addr'] = getXst(msg)
         call['notes'] = getNotes(msg)
+        call['montco_id'] = getCountyNum(msg)
 
     elif (xstIdx > 4 and xstIdx > -1):
         call['addr'] = getAddr(msg)
         call['notes'] = getNotes(msg)
+        call['montco_id'] = getCountyNum(msg)
 
     elif xstIdx < 0:
         munIdx = msg.find('MUN:')
         if munIdx < 0:
             # must just be notes
-            call['County_Num'] = msg[1:msg.find(' ')]
+            call['montco_id'] = msg[1:msg.find(' ')]
             call['notes'] = getNote(msg)
 
+    call['stationKey'] = getStationKey(msg)
+    call['date_time'] = getDateime(msg)
     call['xst'] = getXst(msg)
     call['mun'] = getMun(msg)
     call['nat'] = getNat(msg)
@@ -243,8 +251,8 @@ def parseMsg(msg, date):
     call['lon'] = getlon(msg)
 
     # datestuff = email.utils.parsedate(date)
-    datestuff = dateutil.parser.parse(date).astimezone(dateutil.tz.tzstr('America/New_York'))
-    print(datestuff)
+    # datestuff = dateutil.parser.parse(date).astimezone(dateutil.tz.tzstr('America/New_York'))
+    # print(datestuff)
 
     print(call)
 
