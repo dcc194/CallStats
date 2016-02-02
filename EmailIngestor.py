@@ -86,7 +86,7 @@ def getAddr(msg):
 
 
 def getCountyNum(msg):
-    sIdx = msg.find('I/#')
+    sIdx = msg.find('I#')
     if sIdx == -1:
         return ''
     else:
@@ -221,17 +221,28 @@ def parseMsg(msg, date):
             'lon': '',
             }
 
-    xstIdx = msg.find('XST:')
-    if (xstIdx < 5 and xstIdx > -1):
+    splits = msg.split(' ')
+    if splits[3] == '2400':
+        return None
+
+    includeBitRate = True
+    datapart = ''
+    if splits[3] != '2400' and splits[3] != '1200':
+        includeBitRate = False
+        print(splits[3])
+        datapart = ' '.join(splits[3:])
+    else:
+        datapart = ' '.join(splits[4:])
+
+    xstIdx = datapart.find('XST:')
+    if xstIdx < 5 and xstIdx > -1:
         call['addr'] = getXst(msg)
         call['notes'] = getNotes(msg)
         call['montco_id'] = getCountyNum(msg)
-
-    elif (xstIdx > 4 and xstIdx > -1):
-        call['addr'] = getAddr(msg)
+    elif xstIdx > 4:
+        call['addr'] = getAddr(datapart)
         call['notes'] = getNotes(msg)
         call['montco_id'] = getCountyNum(msg)
-
     elif xstIdx < 0:
         munIdx = msg.find('MUN:')
         if munIdx < 0:
@@ -306,6 +317,7 @@ def processPage(msgs, service, cnx):
         #print(endIdx)
         payloadClipped = payload[:endIdx]
         payloadClipped = payloadClipped.replace('=\r\n', '')
+        payloadClipped = payloadClipped.replace('\r', '')
         payloadClipped = payloadClipped.replace('\r\n', '')
         print(payloadClipped)
         parseMsg(payloadClipped, date)
