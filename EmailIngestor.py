@@ -247,7 +247,7 @@ def parseMsg(msg, date):
         munIdx = msg.find('MUN:')
         if munIdx < 0:
             # must just be notes
-            call['montco_id'] = msg[1:msg.find(' ')]
+            call['montco_id'] = datapart[1:msg.find(' ')]
             call['notes'] = getNote(msg)
 
     call['stationKey'] = getStationKey(msg)
