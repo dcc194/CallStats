@@ -9,7 +9,7 @@ import sys
 import dateutil.parser
 from datetime import date
 import re
-import config
+import my_config
 
 from apiclient import discovery
 import oauth2client
@@ -193,7 +193,8 @@ def getlon(msg):
 
 
 def parseMsg(msg,date):
-    call = {'County_Num' : '',
+    call = {'stationKey': '',
+    'montco_id': '',
     'addr': '',
     'xst': '',
     'mun': '',
@@ -274,14 +275,14 @@ def main():
 
     msgs = msgResults.get('messages')
 
-    cnx = mysql.connector.connect(user='root', password=config.mysqlPass,
+    cnx = mysql.connector.connect(user='root', password=my_config.mysqlPass,
                               host='127.0.0.1',
                               database='all_calls')
 
 
     add_call = ("INSERT INTO calls "
-                    "(County_Num, addr, xst, mun, nat, map, date_time, notes, Trucks, lat, lon) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+                    "(stationKey, montco_id, addr, xst, mun, nat, map, date_time, notes, Trucks, lat, lon) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
 
 
     for msglst in msgs:
