@@ -271,10 +271,6 @@ def parseMsg(msg, date):
 
 
 def processPage(msgs, service, cnx):
-    add_call = ("INSERT INTO calls "
-                "(stationKey, montco_id, addr, xst, mun, nat, map, date_time, notes, Trucks, lat, lon) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-
     for msglst in msgs:
         msgID = msglst.get('id')
         # print(msgID)
@@ -320,7 +316,17 @@ def processPage(msgs, service, cnx):
         payloadClipped = payloadClipped.replace('\r', '')
         payloadClipped = payloadClipped.replace('\r\n', '')
         print(payloadClipped)
-        parseMsg(payloadClipped, date)
+        data = parseMsg(payloadClipped, date)
+
+        cursor = cnx.cursor()
+
+        add_call = ("INSERT INTO calls "
+                "(stationKey, montco_id, addr, xst, mun, nat, map, date_time, notes, Trucks, lat, lon) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+        call_data = (data['stationKey'],data['montco_id'], tomorrow, 'M', date(1977, 6, 14))
+
+        # Insert new employee
+        cursor.execute(add_call, call_data)
 
         # #print(msg.get('payload').get('parts')[0].get('body').get('data'))
         # #msg_str = base64.urlsafe_b64decode(msg.get('payload').get('parts')[1].get('data'))
