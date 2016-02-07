@@ -4,6 +4,7 @@ import os
 import base64
 import email
 import mysql.connector
+import threading, time
 import sys
 import dateutil.parser
 from datetime import date
@@ -11,6 +12,7 @@ import re
 import my_config
 
 from apiclient import discovery
+from apiclient import errors
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
@@ -24,8 +26,7 @@ except ImportError:
 # flags = None
 
 
-
-SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
+SCOPES = 'https://mail.google.com'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'EmailIngestor'
 
@@ -152,6 +153,16 @@ def getDateime(msg):
     date = splits[2].split('-')
     return date[2] + '-' + date[1] + '-' + date[0] + ' ' + splits[1]
 
+def getDay(msg):
+    splits = msg.split(' ')
+    # print(splits[2])
+    try:
+        tm_struct = time.strptime(splits[2], '%d-%m-%y')
+    except:
+        tm_struct = time.strptime(splits[2], '%d-%m-%Y')
+
+    return time.strftime('%a', tm_struct)
+
 def getNotes(msg):
     sIdx = msg.find('NOTES:')
     if sIdx == -1:
@@ -219,6 +230,7 @@ def parseMsg(msg, date):
             'Trucks': '',
             'lat': '',
             'lon': '',
+            'day': ''
             }
 
     splits = msg.split(' ')
@@ -260,6 +272,7 @@ def parseMsg(msg, date):
     call['Trucks'] = getTrucks(msg)
     call['lat'] = getlat(msg)
     call['lon'] = getlon(msg)
+    call['day'] = getDay(msg)
 
     # datestuff = email.utils.parsedate(date)
     # datestuff = dateutil.parser.parse(date).astimezone(dateutil.tz.tzstr('America/New_York'))
@@ -316,17 +329,32 @@ def processPage(msgs, service, cnx):
         payloadClipped = payloadClipped.replace('\r', '')
         payloadClipped = payloadClipped.replace('\r\n', '')
         print(payloadClipped)
-        data = parseMsg(payloadClipped, date)
+        # data = None
+        if payloadClipped.strip(' ') != '':
+            data = parseMsg(payloadClipped, date)
 
-        cursor = cnx.cursor()
+        if (data != None):
 
-        add_call = ("INSERT INTO calls "
-                "(stationKey, montco_id, addr, xst, mun, nat, map, date_time, notes, Trucks, lat, lon) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-        call_data = (data['stationKey'],data['montco_id'], tomorrow, 'M', date(1977, 6, 14))
+            cursor = cnx.cursor()
 
-        # Insert new employee
-        cursor.execute(add_call, call_data)
+            add_call = ("INSERT INTO calls "
+                    "(stationKey, montco_id, addr, xst, mun, nat, map, date_time, notes, Trucks, lat, lon, day) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+            call_data = (data['stationKey'], data['montco_id'], data['addr'], data['xst'], data['mun'], data['nat'],
+                         data['map'], data['date_time'], data['notes'], data['Trucks'],
+                         data['lat'], data['lon'], data['day'])
+
+            # Insert new employee
+            cursor.execute(add_call, call_data)
+
+            cnx.commit()
+            cursor.close()
+
+        try:
+            service.users().messages().trash(userId='me', id=msgID).execute()
+            print('Message with id: %s deleted successfully' % msgID)
+        except errors.HttpError, error:
+            print('an error occurred: %s' % error)
 
         # #print(msg.get('payload').get('parts')[0].get('body').get('data'))
         # #msg_str = base64.urlsafe_b64decode(msg.get('payload').get('parts')[1].get('data'))
@@ -349,46 +377,53 @@ def main():
 
     # return
 
+    print('\n\n Checking Mail . . .')
+
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('gmail', 'v1', http=http)
 
     results = service.users().labels().list(userId='me').execute()
-    labels = results.get('labels', [])
-
-    if not labels:
-        print('No labels found.')
-    else:
-        print('Labels:')
-        for label in labels:
-            print(label['name'])
+    # labels = results.get('labels', [])
+    #
+    # if not labels:
+    #     print('No labels found.')
+    # else:
+    #     print('Labels:')
+    #     for label in labels:
+    #         print(label['name'])
 
     msgResults = service.users().messages().list(userId='me', labelIds=['SENT']).execute()
-    print(msgResults)
+    # print(msgResults)
 
     num = msgResults.get('resultSizeEstimate')
-    print(num)
+    print('Message(s) found: ' + str(num))
 
     msgs = msgResults.get('messages')
 
-    cnx = mysql.connector.connect(user='root', password=my_config.mysqlPass,
+    if (msgs) != None:
+
+        cnx = mysql.connector.connect(user='root', password=my_config.mysqlPass,
                                   host='127.0.0.1',
                                   database='all_calls')
 
-    processPage(msgs, service, cnx)
-
-    while 'nextPageToken' in msgResults:
-        page_token = msgResults['nextPageToken']
-        msgResults = service.users().messages().list(userId='me', labelIds=['SENT'], pageToken=page_token).execute()
-        #print(msgResults)
-
-        num = msgResults.get('resultSizeEstimate')
-        print(num)
-
-        msgs = msgResults.get('messages')
         processPage(msgs, service, cnx)
 
-    cnx.close()
+
+        while 'nextPageToken' in msgResults:
+            page_token = msgResults['nextPageToken']
+            msgResults = service.users().messages().list(userId='me', labelIds=['SENT'], pageToken=page_token).execute()
+            #print(msgResults)
+
+            num = msgResults.get('resultSizeEstimate')
+            print(num)
+
+            msgs = msgResults.get('messages')
+            processPage(msgs, service, cnx)
+
+        cnx.close()
+
+    threading.Timer(20.0, main).start()
 
 
 if __name__ == '__main__':
