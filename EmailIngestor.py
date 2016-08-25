@@ -377,7 +377,9 @@ def main():
 
     # return
 
-    print('\n\n Checking Mail . . .')
+    print('\n\n')
+    print(time.ctime())
+    print('Checking Mail . . .')
 
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
@@ -423,7 +425,7 @@ def main():
 
         cnx.close()
 
-    threading.Timer(20.0, main).start()
+    threading.Timer(60.0, main).start()
 
 
 if __name__ == '__main__':
