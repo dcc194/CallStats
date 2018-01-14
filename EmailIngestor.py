@@ -149,6 +149,7 @@ def getDateime(msg):
     #     eIdx = indOfNextKeyword(msg, sIdx)
     #     if eIdx == -1:
     #         eIdx = len(msg)
+    # print(msg)
     splits = msg.split(' ')
     date = splits[2].split('-')
     return date[2] + '-' + date[1] + '-' + date[0] + ' ' + splits[1]
@@ -232,7 +233,8 @@ def parseMsg(msg, date):
             'lon': '',
             'day': ''
             }
-
+    #print('message:')
+    #print(msg)
     splits = msg.split(' ')
     if splits[3] == '2400':
         return None
@@ -329,7 +331,7 @@ def processPage(msgs, service, cnx):
         payloadClipped = payloadClipped.replace('\r', '')
         payloadClipped = payloadClipped.replace('\r\n', '')
         print(payloadClipped)
-        # data = None
+        #data = None
         if payloadClipped.strip(' ') != '':
             data = parseMsg(payloadClipped, date)
 
