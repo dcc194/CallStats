@@ -222,33 +222,53 @@ def getlon(msg):
         return ''
 
 def countCalls(call):
-    now = datetime.datetime.now()
 
-    fname = str(now) + ".txt"
+    if (calls['nat'] != ''):
 
-    # check if file exists
-    if (os.path.isfile(fname)):
+        now = datetime.datetime.now()
 
-        with open(fname) as myfile:
-            # read dict
-            dict = json.loads(myfile)
+        fname = str(now) + ".txt"
 
-            if (call['County_Num'].startswith('F')):
-                dict['fire'] = dict['fire'] + 1
-            else:
-                dict['ems'] = dict['ems'] + 1
-            # write dict
-            myfile.write(json.dumps(dict))
-    else:
-        with open(fname) as myfile:
-            dict['fire'] = 0
-            dict['ems'] = 0
-            if (call['County_Num'].startswith('F')):
-                dict['fire'] = dict['fire'] + 1
-            else:
-                dict['ems'] = dict['ems'] + 1
+        # check if file exists
+        if (os.path.isfile(fname)):
 
-    staNam = call[]
+            with open(fname) as myfile:
+                # read dict
+                dict = json.loads(myfile)
+
+                if (call['montco_id'].startswith('F')):
+                    dict['fire'] = dict['fire'] + 1
+                else:
+                    dict['ems'] = dict['ems'] + 1
+                # write dict
+                myfile.write(json.dumps(dict))
+        else:
+            with open(fname) as myfile:
+                dict['fire'] = 0
+                dict['ems'] = 0
+                if (call['montco_id'].startswith('F')):
+                    dict['fire'] = dict['fire'] + 1
+                else:
+                    dict['ems'] = dict['ems'] + 1
+
+                myfile.write(json.dumps(dict))
+
+        file_staNam = call['stationKey'] + ".txt"
+        if (os.path.isfile(file_staNam)):
+            with open(file_staNam) as myfile:
+                callTypeCounts = json.loads(myfile)
+                if call['nat'] in callTypeCounts:
+                    callTypeCounts[call['nat']] = call['nat'] + 1
+                else:
+                    callTypeCounts[call['nat']] = 1
+                myfile.write(json.dumps(callTypeCounts))
+        else:
+            callTypeCounts[call['nat']] = 1
+            myfile.write(json.dumps(callTypeCounts))
+
+        
+
+
 
 
 def parseMsg(msg, date):
