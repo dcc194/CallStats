@@ -68,7 +68,7 @@ def get_credentials():
 def indOfNextKeyword(msg, curIdx):
     keyIdx = 999999999999
 
-    keywrds = ['XST:', 'MUN:', 'NAT:', 'MAP/BOX-PLAN:', 'ADC:', 'I#', 'TIME:', 'NOTES:', 'Note:', 'TRUCKS']
+    keywrds = ['XST:', 'MUN:', 'NAT:', 'MAP/BOX:', 'ADC:', 'I#', 'TIME:', 'NOTES:', 'Note:', 'TRUCKS']
     for w in keywrds:
         tmpIdx = msg.find(w)
         if tmpIdx > curIdx and tmpIdx < keyIdx:
@@ -136,7 +136,7 @@ def getNat(msg):
 
 
 def getMap(msg):
-    sIdx = msg.find('MAP/BOX-PLAN:')
+    sIdx = msg.find('MAP/BOX:')
     if sIdx == -1:
         return ''
     else:
@@ -224,30 +224,33 @@ def getlon(msg):
 
 def countCalls(call):
 
-    if (calls['nat'] != ''):
+    if (call['nat'] != ''):
 
-        now = datetime.datetime.now()
+        now = datetime.date.today()
 
         fname = str(now) + ".txt"
 
         # check if file exists
         if (os.path.isfile(fname)):
 
-            with open(fname) as myfile:
+            with open(fname, "r+" ) as myfile:
                 # read dict
-                dict = json.loads(myfile)
+                dict = json.load(myfile)
+                myfile.seek(0)
 
                 if (call['montco_id'].startswith('F')):
                     dict['fire'] = dict['fire'] + 1
                 else:
                     dict['ems'] = dict['ems'] + 1
 
-                print ("Daily Totals\n Fire: " + dict['fire'] + "\n EMS: " + dict['ems'])
+                print ("Daily Totals\n Fire: " + str(dict['fire']) + "\n EMS: " + str(dict['ems']) + "\n")
 
                 # write dict
                 myfile.write(json.dumps(dict))
+                myfile.truncate()
         else:
-            with open(fname) as myfile:
+            with open(fname,"a+") as myfile:
+                dict = {}
                 dict['fire'] = 0
                 dict['ems'] = 0
                 if (call['montco_id'].startswith('F')):
@@ -259,16 +262,22 @@ def countCalls(call):
 
         file_staNam = call['stationKey'] + ".txt"
         if (os.path.isfile(file_staNam)):
-            with open(file_staNam) as myfile:
-                callTypeCounts = json.loads(myfile)
+            with open(file_staNam, "r+") as myfile:
+                callTypeCounts = json.load(myfile)
+                myfile.seek(0)
                 if call['nat'] in callTypeCounts:
-                    callTypeCounts[call['nat']] = call['nat'] + 1
+                    callTypeCounts[call['nat']] = callTypeCounts[call['nat']] + 1
                 else:
                     callTypeCounts[call['nat']] = 1
                 myfile.write(json.dumps(callTypeCounts))
+                myfile.truncate()
+
         else:
-            callTypeCounts[call['nat']] = 1
-            myfile.write(json.dumps(callTypeCounts))
+            with open(file_staNam, "a+") as myfile:
+                callTypeCounts = {}
+                callTypeCounts[call['nat']] = 1
+                myfile.write(json.dumps(callTypeCounts))
+                #myfile.truncate()
 
 
 
