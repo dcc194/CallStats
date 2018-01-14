@@ -228,7 +228,7 @@ def countCalls(call):
 
         now = datetime.date.today()
 
-        fname = str(now) + ".txt"
+        fname = "daily/" + str(now) + ".txt"
 
         # check if file exists
         if (os.path.isfile(fname)):
@@ -260,7 +260,7 @@ def countCalls(call):
 
                 myfile.write(json.dumps(dict))
 
-        file_staNam = call['stationKey'] + ".txt"
+        file_staNam = "stations/" + call['stationKey'] + ".txt"
         if (os.path.isfile(file_staNam)):
             with open(file_staNam, "r+") as myfile:
                 callTypeCounts = json.load(myfile)
