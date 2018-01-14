@@ -202,13 +202,22 @@ def countCalls(call):
             # read dict
             dict = json.loads(myfile)
 
+            if (call['County_Num'].startswith('F')):
+                dict['fire'] = dict['fire'] + 1
+            else:
+                dict['ems'] = dict['ems'] + 1
             # write dict
-            myfile.write(json.dumps(exDict))
+            myfile.write(json.dumps(dict))
     else:
         with open(fname) as myfile:
             dict['fire'] = 0
             dict['ems'] = 0
-            if (call)
+            if (call['County_Num'].startswith('F')):
+                dict['fire'] = dict['fire'] + 1
+            else:
+                dict['ems'] = dict['ems'] + 1
+
+    staNam = call[]
 
 
 def parseMsg(msg,date):
