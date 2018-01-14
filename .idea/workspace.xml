@@ -26,8 +26,8 @@
       <file leaf-file-name="EmailIngestor.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/EmailIngestor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="392">
-              <caret line="268" column="8" selection-start-line="268" selection-start-column="8" selection-end-line="268" selection-end-column="8" />
+            <state relative-caret-position="-1448">
+              <caret line="243" column="88" selection-start-line="243" selection-start-column="88" selection-end-line="243" selection-end-column="88" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
               </folding>
@@ -358,7 +358,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/EmailIngestor.py</url>
-          <line>298</line>
+          <line>301</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
@@ -605,8 +605,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/EmailIngestor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="392">
-          <caret line="268" column="8" selection-start-line="268" selection-start-column="8" selection-end-line="268" selection-end-column="8" />
+        <state relative-caret-position="-1448">
+          <caret line="243" column="88" selection-start-line="243" selection-start-column="88" selection-end-line="243" selection-end-column="88" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
           </folding>

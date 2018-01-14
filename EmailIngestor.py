@@ -240,6 +240,9 @@ def countCalls(call):
                     dict['fire'] = dict['fire'] + 1
                 else:
                     dict['ems'] = dict['ems'] + 1
+
+                print ("Daily Totals\n Fire: " + dict['fire'] + "\n EMS: " + dict['ems'])
+
                 # write dict
                 myfile.write(json.dumps(dict))
         else:
@@ -266,7 +269,7 @@ def countCalls(call):
             callTypeCounts[call['nat']] = 1
             myfile.write(json.dumps(callTypeCounts))
 
-        
+
 
 
 
