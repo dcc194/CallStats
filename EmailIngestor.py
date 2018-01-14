@@ -7,8 +7,12 @@ import email
 import mysql.connector
 import sys
 import dateutil.parser
+import datetime
 from datetime import date
 import re
+import cPickle as pickle
+import json
+import os.path
 
 from apiclient import discovery
 import oauth2client
@@ -45,7 +49,7 @@ def get_credentials():
 
     store = oauth2client.file.Storage(credential_path)
     credentials = store.get()
-    if not credentials or credentials.invalid:
+    if not credentials or credentials.invalid or credentials == None:
         flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
         flow.user_agent = APPLICATION_NAME
         if flags:
@@ -186,6 +190,26 @@ def getlon(msg):
     else:
         return ''
 
+def countCalls(call):
+    now = datetime.datetime.now()
+
+    fname = str(now) + ".txt"
+
+    # check if file exists
+    if (os.path.isfile(fname)):
+
+        with open(fname) as myfile:
+            # read dict
+            dict = json.loads(myfile)
+
+            # write dict
+            myfile.write(json.dumps(exDict))
+    else:
+        with open(fname) as myfile:
+            dict['fire'] = 0
+            dict['ems'] = 0
+            if (call)
+
 
 def parseMsg(msg,date):
     call = {'County_Num' : '',
@@ -227,12 +251,13 @@ def parseMsg(msg,date):
     call['lon'] = getlon(msg)
 
     #datestuff = email.utils.parsedate(date)
-    datestuff = dateutil.parser.parse(date).astimezone(dateutil.tz.tzstr('America/New_York'))
+    datestuff = dateutil.parser.parse(date)  #.astimezone(dateutil.tz.tzstr('America/New_York'))
+    
     print(datestuff)
 
     print (call)
 
-
+    countCalls(call)
 
     return call
 
