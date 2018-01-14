@@ -7,8 +7,13 @@ import mysql.connector
 import threading, time
 import sys
 import dateutil.parser
+import datetime
 from datetime import date
 import re
+
+import cPickle as pickle
+import json
+import os.path
 import my_config
 
 from apiclient import discovery
@@ -49,7 +54,7 @@ def get_credentials():
 
     store = oauth2client.file.Storage(credential_path)
     credentials = store.get()
-    if not credentials or credentials.invalid:
+    if not credentials or credentials.invalid or credentials == None:
         flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
         flow.user_agent = APPLICATION_NAME
         if flags:
@@ -217,6 +222,58 @@ def getlon(msg):
     else:
         return ''
 
+def countCalls(call):
+
+    if (calls['nat'] != ''):
+
+        now = datetime.datetime.now()
+
+        fname = str(now) + ".txt"
+
+        # check if file exists
+        if (os.path.isfile(fname)):
+
+            with open(fname) as myfile:
+                # read dict
+                dict = json.loads(myfile)
+
+                if (call['montco_id'].startswith('F')):
+                    dict['fire'] = dict['fire'] + 1
+                else:
+                    dict['ems'] = dict['ems'] + 1
+
+                print ("Daily Totals\n Fire: " + dict['fire'] + "\n EMS: " + dict['ems'])
+
+                # write dict
+                myfile.write(json.dumps(dict))
+        else:
+            with open(fname) as myfile:
+                dict['fire'] = 0
+                dict['ems'] = 0
+                if (call['montco_id'].startswith('F')):
+                    dict['fire'] = dict['fire'] + 1
+                else:
+                    dict['ems'] = dict['ems'] + 1
+
+                myfile.write(json.dumps(dict))
+
+        file_staNam = call['stationKey'] + ".txt"
+        if (os.path.isfile(file_staNam)):
+            with open(file_staNam) as myfile:
+                callTypeCounts = json.loads(myfile)
+                if call['nat'] in callTypeCounts:
+                    callTypeCounts[call['nat']] = call['nat'] + 1
+                else:
+                    callTypeCounts[call['nat']] = 1
+                myfile.write(json.dumps(callTypeCounts))
+        else:
+            callTypeCounts[call['nat']] = 1
+            myfile.write(json.dumps(callTypeCounts))
+
+
+
+
+
 
 def parseMsg(msg, date):
     call = {'stationKey': '',
@@ -281,6 +338,8 @@ def parseMsg(msg, date):
     # print(datestuff)
 
     print(call)
+
+    countCalls(call)
 
     return call
 
