@@ -8,6 +8,8 @@ import threading, time
 import sys
 import dateutil.parser
 import datetime
+from dateutil import parser
+from datetime import timedelta
 from datetime import date
 import re
 
@@ -228,37 +230,73 @@ def countCalls(call):
 
         now = datetime.date.today()
 
+        countCall = False
+        fileEmpty = False
+        historyFile = "24HrHistory.txt"
+        if (os.path.isfile(historyFile)):
+            with open(historyFile, "r+") as myfile:
+                ids = json.load(myfile)
+
+                myfile.seek(0)
+                curTime = datetime.datetime.now()
+                if call['montco_id'] not in ids:
+                    ids[call['montco_id']] = curTime.strftime("%Y-%m-%d %H:%M:%S")
+                    countCall = True
+
+                for k, v in ids.items():
+                    #print(v)
+                    dt = parser.parse(str(v))
+                    correctedDate = dt + timedelta(days=1)
+                    if correctedDate < curTime:
+                        del ids[k]
+                        print ("deleted id from " + v)
+
+                myfile.write(json.dumps(ids))
+                myfile.truncate()
+        else:
+            with open(historyFile, "a+") as myfile:
+                ids = {}
+                #myfile.seek(0)
+                curTime = datetime.datetime.now()
+                if call['montco_id'] not in ids:
+                    ids[call['montco_id']] = curTime.strftime("%Y-%m-%d %H:%M:%S")
+                    countCall = True
+
+                myfile.write(json.dumps(ids))
+                myfile.truncate()
+
         fname = "daily/" + str(now) + ".txt"
 
         # check if file exists
         if (os.path.isfile(fname)):
+            if countCall:
+                with open(fname, "r+" ) as myfile:
+                    # read dict
+                    dict = json.load(myfile)
+                    myfile.seek(0)
 
-            with open(fname, "r+" ) as myfile:
-                # read dict
-                dict = json.load(myfile)
-                myfile.seek(0)
+                    if (call['montco_id'].startswith('F')):
+                        dict['fire'] = dict['fire'] + 1
+                    else:
+                        dict['ems'] = dict['ems'] + 1
 
-                if (call['montco_id'].startswith('F')):
-                    dict['fire'] = dict['fire'] + 1
-                else:
-                    dict['ems'] = dict['ems'] + 1
+                    print ("Daily Totals\n Fire: " + str(dict['fire']) + "\n EMS: " + str(dict['ems']) + "\n")
 
-                print ("Daily Totals\n Fire: " + str(dict['fire']) + "\n EMS: " + str(dict['ems']) + "\n")
-
-                # write dict
-                myfile.write(json.dumps(dict))
-                myfile.truncate()
+                    # write dict
+                    myfile.write(json.dumps(dict))
+                    myfile.truncate()
         else:
-            with open(fname,"a+") as myfile:
-                dict = {}
-                dict['fire'] = 0
-                dict['ems'] = 0
-                if (call['montco_id'].startswith('F')):
-                    dict['fire'] = dict['fire'] + 1
-                else:
-                    dict['ems'] = dict['ems'] + 1
+            if countCall:
+                with open(fname,"a+") as myfile:
+                    dict = {}
+                    dict['fire'] = 0
+                    dict['ems'] = 0
+                    if (call['montco_id'].startswith('F')):
+                        dict['fire'] = dict['fire'] + 1
+                    else:
+                        dict['ems'] = dict['ems'] + 1
 
-                myfile.write(json.dumps(dict))
+                    myfile.write(json.dumps(dict))
 
         file_staNam = "stations/" + call['stationKey'] + ".txt"
         if (os.path.isfile(file_staNam)):
