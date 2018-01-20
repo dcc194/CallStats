@@ -251,7 +251,7 @@ def countCalls(call):
                         del ids[k]
                         print ("deleted id from " + v)
 
-                myfile.write(json.dumps(ids))
+                myfile.write(json.dumps(ids,sort_keys=True, indent=4))
                 myfile.truncate()
         else:
             with open(historyFile, "a+") as myfile:
@@ -262,7 +262,7 @@ def countCalls(call):
                     ids[call['montco_id']] = curTime.strftime("%Y-%m-%d %H:%M:%S")
                     countCall = True
 
-                myfile.write(json.dumps(ids))
+                myfile.write(json.dumps(ids,sort_keys=True, indent=4))
                 myfile.truncate()
 
         fname = "daily/" + str(now) + ".txt"
@@ -283,7 +283,7 @@ def countCalls(call):
                     print ("Daily Totals\n Fire: " + str(dict['fire']) + "\n EMS: " + str(dict['ems']) + "\n")
 
                     # write dict
-                    myfile.write(json.dumps(dict))
+                    myfile.write(json.dumps(dict,sort_keys=True, indent=4))
                     myfile.truncate()
         else:
             if countCall:
@@ -296,7 +296,7 @@ def countCalls(call):
                     else:
                         dict['ems'] = dict['ems'] + 1
 
-                    myfile.write(json.dumps(dict))
+                    myfile.write(json.dumps(dict,sort_keys=True, indent=4))
 
         file_staNam = "stations/" + call['stationKey'] + ".txt"
         if (os.path.isfile(file_staNam)):
@@ -307,14 +307,14 @@ def countCalls(call):
                     callTypeCounts[call['nat']] = callTypeCounts[call['nat']] + 1
                 else:
                     callTypeCounts[call['nat']] = 1
-                myfile.write(json.dumps(callTypeCounts))
+                myfile.write(json.dumps(callTypeCounts,sort_keys=True, indent=4))
                 myfile.truncate()
 
         else:
             with open(file_staNam, "a+") as myfile:
                 callTypeCounts = {}
                 callTypeCounts[call['nat']] = 1
-                myfile.write(json.dumps(callTypeCounts))
+                myfile.write(json.dumps(callTypeCounts,sort_keys=True, indent=4))
                 #myfile.truncate()
 
 
