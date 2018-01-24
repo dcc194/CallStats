@@ -13,6 +13,11 @@ from datetime import timedelta
 from datetime import date
 import re
 
+
+from ftplib import FTP
+import ftplib
+import paramiko
+
 import cPickle as pickle
 import json
 import os.path
@@ -145,7 +150,7 @@ def getMap(msg):
         eIdx = indOfNextKeyword(msg, sIdx)
         if eIdx == -1:
             eIdx = len(msg)
-    return msg[sIdx + 13:eIdx]
+    return msg[sIdx + 8:eIdx]
 
 
 def getDateime(msg):
@@ -224,11 +229,32 @@ def getlon(msg):
     else:
         return ''
 
+# Check if directory exists (in current location)
+def directory_exists(dir, ftp):
+    filelist = []
+    ftp.retrlines('LIST',filelist.append)
+    return any(f.split()[-1] == dir and f.upper().startswith('D') for f in filelist)
+	
+		
 def countCalls(call):
 
     if (call['nat'] != ''):
 
         now = datetime.date.today()
+
+		#FTP Connection
+        ftp = FTP('185.27.134.11','b10_21446123',my_config.mysqlPass)
+		
+        if directory_exists('daily',ftp) is False:
+            ftp.mkd('daily')
+
+        if directory_exists('stations', ftp) is False:
+            ftp.mkd('stations')
+
+        transport = paramiko.Transport(("johnny.heliohost.org", 1373))
+        transport.connect(username = 'dcc194', password = my_config.mysqlPass)
+
+        sftp = paramiko.SFTPClient.from_transport(transport)
 
         countCall = False
         fileEmpty = False
@@ -236,7 +262,6 @@ def countCalls(call):
         if (os.path.isfile(historyFile)):
             with open(historyFile, "r+") as myfile:
                 ids = json.load(myfile)
-
                 myfile.seek(0)
                 curTime = datetime.datetime.now()
                 if call['montco_id'] not in ids:
@@ -253,6 +278,18 @@ def countCalls(call):
 
                 myfile.write(json.dumps(ids,sort_keys=True, indent=4))
                 myfile.truncate()
+                myfile.seek(0)
+                # ftp.cwd('/hour/')
+                # print(ftp.pwd())
+                # ftp.storlines('STOR 24HrHistory.txt',myfile)
+            #try:
+            sftp.put('./24HrHistory.txt', '/home/dcc194/public_html/hour/24HrHistory.txt')
+                #ftp.cwd('/htdocs/hour/')
+                #print(ftp.pwd())
+                #ftp.storlines('STOR 24HrHistory.txt',open(historyFile,'r'))
+            #except:
+            #    print('sftp error')
+
         else:
             with open(historyFile, "a+") as myfile:
                 ids = {}
@@ -264,6 +301,15 @@ def countCalls(call):
 
                 myfile.write(json.dumps(ids,sort_keys=True, indent=4))
                 myfile.truncate()
+                #myfile.seek(0)
+            #try:
+            sftp.put('./24HrHistory.txt', '/home/dcc194/public_html/hour/24HrHistory.txt')
+                #ftp.cwd('/htdocs/hour/')
+                #print(ftp.pwd())
+                #ftp.storlines('STOR 24HrHistory.txt',open(historyFile,'r'))
+            #except:
+            #    print('sftp error')
+
 
         fname = "daily/" + str(now) + ".txt"
 
@@ -285,6 +331,24 @@ def countCalls(call):
                     # write dict
                     myfile.write(json.dumps(dict,sort_keys=True, indent=4))
                     myfile.truncate()
+                    # myfile.seek(0)
+                    #
+                    # ftp.cwd('/daily/')
+                    # print(ftp.pwd())
+                    # ftp.storlines('STOR ' + str(now) + ".txt",myfile)
+                # try:
+                #     ftp.cwd('/htdocs/daily/')
+                #     print(ftp.pwd())
+                #     ftp.storlines('STOR ' +  str(now) + ".txt", open(fname, 'r'))
+                # except ftplib.all_errors,e:
+                #     print(str(e))
+                try:
+                    sftp.put( fname, '/home/dcc194/public_html/daily/' + str(now) + ".txt")
+                    #ftp.cwd('/htdocs/hour/')
+                    #print(ftp.pwd())
+                    #ftp.storlines('STOR 24HrHistory.txt',open(historyFile,'r'))
+                except:
+                    print('sftp error')
         else:
             if countCall:
                 with open(fname,"a+") as myfile:
@@ -297,6 +361,23 @@ def countCalls(call):
                         dict['ems'] = dict['ems'] + 1
 
                     myfile.write(json.dumps(dict,sort_keys=True, indent=4))
+                    # myfile.seek(0)
+                    # ftp.cwd('/daily/')
+                    # print(ftp.pwd())
+                    # ftp.storlines('STOR ' + str(now) + ".txt",myfile)
+                # try:
+                #     ftp.cwd('/htdocs/daily/')
+                #     print(ftp.pwd())
+                #     ftp.storlines('STOR ' +  str(now) + ".txt", open(fname, 'r'))
+                # except ftplib.all_errors,e:
+                #     print(str(e))
+                try:
+                    sftp.put( fname, '/home/dcc194/public_html/daily/' + str(now) + ".txt")
+                    #ftp.cwd('/htdocs/hour/')
+                    #print(ftp.pwd())
+                    #ftp.storlines('STOR 24HrHistory.txt',open(historyFile,'r'))
+                except:
+                    print('sftp error')
 
         file_staNam = "stations/" + call['stationKey'] + ".txt"
         if (os.path.isfile(file_staNam)):
@@ -307,8 +388,25 @@ def countCalls(call):
                     callTypeCounts[call['nat']] = callTypeCounts[call['nat']] + 1
                 else:
                     callTypeCounts[call['nat']] = 1
-                myfile.write(json.dumps(callTypeCounts,sort_keys=True, indent=4))
+                myfile.write(json.dumps(callTypeCounts, sort_keys=True, indent=4))
                 myfile.truncate()
+                # myfile.seek(0)
+                # ftp.cwd('/stations/')
+                # print(ftp.pwd())
+                # ftp.storlines('STOR ' + call['stationKey'] + ".txt",myfile)
+            # try:
+            #     ftp.cwd('/htdocs/stations/')
+            #     print(ftp.pwd())
+            #     ftp.storlines('STOR ' + call['stationKey'] + ".txt", open(file_staNam, 'r'))
+            # except ftplib.all_errors,e:
+            #     print(str(e))
+            try:
+                sftp.put( file_staNam, '/home/dcc194/public_html/stations/' + call['stationKey'] + ".txt")
+                #ftp.cwd('/htdocs/hour/')
+                #print(ftp.pwd())
+                #ftp.storlines('STOR 24HrHistory.txt',open(historyFile,'r'))
+            except:
+                print('sftp error')
 
         else:
             with open(file_staNam, "a+") as myfile:
@@ -316,10 +414,28 @@ def countCalls(call):
                 callTypeCounts[call['nat']] = 1
                 myfile.write(json.dumps(callTypeCounts,sort_keys=True, indent=4))
                 #myfile.truncate()
+                # myfile.seek(0)
+                # ftp.cwd('/stations/')
+                # print(ftp.pwd())
+                # ftp.storlines('STOR ' + call['stationKey'] + ".txt",myfile)
+            # try:
+            #     ftp.cwd('/htdocs/stations/')
+            #     print(ftp.pwd())
+            #     ftp.storlines('STOR ' + call['stationKey'] + ".txt", open(file_staNam, 'r'))
+            # except ftplib.all_errors,e:
+            #     print(str(e))
+            try:
+                sftp.put( file_staNam, '/home/dcc194/public_html/stations/' + call['stationKey'] + ".txt")
+                #ftp.cwd('/htdocs/hour/')
+                #print(ftp.pwd())
+                #ftp.storlines('STOR 24HrHistory.txt',open(historyFile,'r'))
+            except:
+                print('sftp error')
 
 
+        sftp.close()
 
-
+        transport.close()
 
 
 def parseMsg(msg, date):
