@@ -343,7 +343,7 @@ def countCalls(call):
                     print('sftp error')
 
 
-        if call['station_key'].startswith('03'):
+        if call['stationKey'].startswith('03'):
             fname = "daily/" + str(now) + "_EmsTotals.txt"
         else:
             fname = "daily/" + str(now) + "_FireTotals.txt"
@@ -355,12 +355,18 @@ def countCalls(call):
                 dict = json.load(myfile)
                 myfile.seek(0)
 
-                if call['station_key'] in dict:
-                    dict[call['station_key']] = dict[call['station_key']] + 1
-                else:
-                    dict[call['station_key']] = 1
+                if call['stationKey'] in dict:
+                    callList = []
+                    if call['stationKey']+ "_id" in dict:
+                        callList = dict[call['stationKey']+ "_id"].split(',')
 
-                #print ("Daily Totals\n Fire: " + str(dict['fire']) + "\n EMS: " + str(dict['ems']) + "\n")
+                    if call['montco_id'] not in callList:
+                        dict[call['stationKey']] = dict[call['stationKey']] + 1
+                        callList.append(call['montco_id'])
+                        dict[call['stationKey'] + "_id"] = ",".join(callList)
+                else:
+                    dict[call['stationKey']] = 1
+                    dict[call['stationKey'] + "_id"] = call['montco_id']
 
                 # write dict
                 myfile.write(json.dumps(dict,sort_keys=True, indent=4))
@@ -372,7 +378,7 @@ def countCalls(call):
         else:
             with open(fname,"a+") as myfile:
                 dict = {}
-                dict[call['station_key']] = 1
+                dict[call['stationKey']] = 1
 
                 myfile.write(json.dumps(dict,sort_keys=True, indent=4))
             try:
