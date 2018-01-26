@@ -343,7 +343,10 @@ def countCalls(call):
                     print('sftp error')
 
 
-        fname = "daily/" + str(now) + "_totals.txt"
+        if call['station_key'].startswith('0'):
+            fname = "daily/" + str(now) + "_EmsTotals.txt"
+        else:
+            fname = "daily/" + str(now) + "_FireTotals.txt"
 
         # check if file exists
         if (os.path.isfile(fname)):
@@ -363,7 +366,7 @@ def countCalls(call):
                 myfile.write(json.dumps(dict,sort_keys=True, indent=4))
                 myfile.truncate()
             try:
-                sftp.put( fname, '/home/dcc194/public_html/daily/' + str(now) + "_totals.txt")
+                sftp.put( fname, '/home/dcc194/public_html/' + fname)
             except:
                 print('sftp error')
         else:
@@ -373,7 +376,7 @@ def countCalls(call):
 
                 myfile.write(json.dumps(dict,sort_keys=True, indent=4))
             try:
-                sftp.put( fname, '/home/dcc194/public_html/daily/' + str(now) + "_totals.txt")
+                sftp.put( fname, '/home/dcc194/public_html/' + fname)
             except:
                 print('sftp error')
 
