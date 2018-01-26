@@ -361,21 +361,9 @@ def countCalls(call):
                         dict['ems'] = dict['ems'] + 1
 
                     myfile.write(json.dumps(dict,sort_keys=True, indent=4))
-                    # myfile.seek(0)
-                    # ftp.cwd('/daily/')
-                    # print(ftp.pwd())
-                    # ftp.storlines('STOR ' + str(now) + ".txt",myfile)
-                # try:
-                #     ftp.cwd('/htdocs/daily/')
-                #     print(ftp.pwd())
-                #     ftp.storlines('STOR ' +  str(now) + ".txt", open(fname, 'r'))
-                # except ftplib.all_errors,e:
-                #     print(str(e))
+
                 try:
                     sftp.put( fname, '/home/dcc194/public_html/daily/' + str(now) + ".txt")
-                    #ftp.cwd('/htdocs/hour/')
-                    #print(ftp.pwd())
-                    #ftp.storlines('STOR 24HrHistory.txt',open(historyFile,'r'))
                 except:
                     print('sftp error')
 
