@@ -343,7 +343,7 @@ def countCalls(call):
                     print('sftp error')
 
 
-        if call['station_key'].startswith('0'):
+        if call['station_key'].startswith('03'):
             fname = "daily/" + str(now) + "_EmsTotals.txt"
         else:
             fname = "daily/" + str(now) + "_FireTotals.txt"
