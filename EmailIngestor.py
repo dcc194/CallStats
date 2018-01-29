@@ -251,8 +251,9 @@ def countCalls(call):
   #       if directory_exists('stations', ftp) is False:
   #           ftp.mkd('stations')
 
-        transport = paramiko.Transport(("johnny.heliohost.org", 1373))
-        transport.connect(username = 'dcc194', password = my_config.mysqlPass)
+        transport = paramiko.Transport(("ricky.heliohost.org", 1312))
+		#transport = paramiko.Transport(("johnny.heliohost.org", 1373))
+        transport.connect(username = 'dcc', password = my_config.mysqlPass)
 
         sftp = paramiko.SFTPClient.from_transport(transport)
 
@@ -280,7 +281,7 @@ def countCalls(call):
                 myfile.truncate()
                 myfile.seek(0)
             try:
-                sftp.put('./24HrHistory.txt', '/home/dcc194/public_html/hour/24HrHistory.txt')
+                sftp.put('./24HrHistory.txt', '/home/dcc/public_html/hour/24HrHistory.txt')
             except:
                 print('sftp error')
 
@@ -295,7 +296,7 @@ def countCalls(call):
                 myfile.write(json.dumps(ids,sort_keys=True, indent=4))
                 myfile.truncate()
             try:
-                sftp.put('./24HrHistory.txt', '/home/dcc194/public_html/hour/24HrHistory.txt')
+                sftp.put('./24HrHistory.txt', '/home/dcc/public_html/hour/24HrHistory.txt')
             except:
                 print('sftp error')
 
@@ -310,9 +311,9 @@ def countCalls(call):
                     dict = json.load(myfile)
                     myfile.seek(0)
 
-                    if (call['montco_id'].startswith('F')):
+                    if (call['montco_id'].startswith('F') and 'TRANSFERRED' not in call['nat']):
                         dict['fire'] = dict['fire'] + 1
-                    else:
+                    elif 'TRANSFERRED' not in call['nat']:
                         dict['ems'] = dict['ems'] + 1
 
                     print ("Daily Totals\n Fire: " + str(dict['fire']) + "\n EMS: " + str(dict['ems']) + "\n")
@@ -321,7 +322,7 @@ def countCalls(call):
                     myfile.write(json.dumps(dict,sort_keys=True, indent=4))
                     myfile.truncate()
                 try:
-                    sftp.put( fname, '/home/dcc194/public_html/daily/' + str(now) + ".txt")
+                    sftp.put( fname, '/home/dcc/public_html/daily/' + str(now) + ".txt")
                 except:
                     print('sftp error')
         else:
@@ -330,15 +331,15 @@ def countCalls(call):
                     dict = {}
                     dict['fire'] = 0
                     dict['ems'] = 0
-                    if (call['montco_id'].startswith('F')):
+                    if (call['montco_id'].startswith('F') and 'TRANSFERRED' not in call['nat']):
                         dict['fire'] = dict['fire'] + 1
-                    else:
+                    elif 'TRANSFERRED' not in call['nat']:
                         dict['ems'] = dict['ems'] + 1
 
                     myfile.write(json.dumps(dict,sort_keys=True, indent=4))
 
                 try:
-                    sftp.put( fname, '/home/dcc194/public_html/daily/' + str(now) + ".txt")
+                    sftp.put( fname, '/home/dcc/public_html/daily/' + str(now) + ".txt")
                 except:
                     print('sftp error')
 
@@ -372,7 +373,7 @@ def countCalls(call):
                 myfile.write(json.dumps(dict,sort_keys=True, indent=4))
                 myfile.truncate()
             try:
-                sftp.put( fname, '/home/dcc194/public_html/' + fname)
+                sftp.put( fname, '/home/dcc/public_html/' + fname)
             except:
                 print('sftp error')
         else:
@@ -382,7 +383,7 @@ def countCalls(call):
 
                 myfile.write(json.dumps(dict,sort_keys=True, indent=4))
             try:
-                sftp.put( fname, '/home/dcc194/public_html/' + fname)
+                sftp.put( fname, '/home/dcc/public_html/' + fname)
             except:
                 print('sftp error')
 
@@ -398,7 +399,7 @@ def countCalls(call):
                 myfile.write(json.dumps(callTypeCounts, sort_keys=True, indent=4))
                 myfile.truncate()
             try:
-                sftp.put( file_staNam, '/home/dcc194/public_html/stations/' + call['stationKey'] + ".txt")
+                sftp.put( file_staNam, '/home/dcc/public_html/stations/' + call['stationKey'] + ".txt")
             except:
                 print('sftp error')
 
@@ -408,7 +409,7 @@ def countCalls(call):
                 callTypeCounts[call['nat']] = 1
                 myfile.write(json.dumps(callTypeCounts,sort_keys=True, indent=4))
             try:
-                sftp.put( file_staNam, '/home/dcc194/public_html/stations/' + call['stationKey'] + ".txt")
+                sftp.put( file_staNam, '/home/dcc/public_html/stations/' + call['stationKey'] + ".txt")
             except:
                 print('sftp error')
 
